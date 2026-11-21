@@ -8,8 +8,10 @@ export type Gift = {
   brand: string;       // ブランド・店名
   name: string;        // 商品名
   price: number;       // 価格（円）
-  rating: number;      // レビューの平均
+  rating: number | null; // レビューの平均。レビューがない商品は null（0 とは区別する）
   reviewCount: number; // レビュー件数
+  description: string; // 説明文（原文のまま。カードでは冒頭2行だけ見せる）
+  matchedTags: string[]; // 選んだタグのうち、この商品に付いているタグ名（タグを選ばないときは空）
 };
 
 // 画面から渡す検索条件（2つのタブの分をまとめて持つ）
