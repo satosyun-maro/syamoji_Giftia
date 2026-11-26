@@ -1,9 +1,6 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure Functions: https://aka.ms/python-webapps-actions
-#
-# 【デモ用コピー】リリース手順書 2.4 のとおり、モノレポ（backend/）向けに6か所を直した版。
-# 直した場所には「← 1」〜「← 6」の目印を付けてある。
 
 name: Build and deploy Python project to Azure Function App - func-gen13-step3-6231
 
@@ -11,22 +8,17 @@ on:
   push:
     branches:
       - 'main'
-    paths:                                  # ← 1 backend/ が変わったときだけ動かす
-      - 'backend/**'
-      - '.github/workflows/main_func-gen13-step3-6231.yml'
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: '3.14' # 関数アプリと同じバージョンにする
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  PYTHON_VERSION: '3.14' # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
-    defaults:                               # ← 2 以下の run: を backend/ の中で動かす
-      run:
-        working-directory: backend
 
     steps:
       - name: Checkout repository
@@ -48,33 +40,38 @@ jobs:
       # Optional: Add step to run tests here
 
       - name: Zip artifact for deployment
-        run: zip -qr ../release.zip . -x 'venv/*'   # ← 3 backend/ の中身だけを固める。zip は一つ上（リポジトリ直下）に置く
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip                 # ← 4 venv の指定は要らない
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
-          # ここに path: は書かない（書くと release.zip という名前のフォルダができる）
 
-      # ← 5 「Unzip artifact for deployment」の手順は削除した（zip のまま Azure に送る）
-
+      - name: Unzip artifact for deployment
+        run: |
+          unzip release.zip
+          rm release.zip
+        
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
         id: deploy-to-function
         with:
           app-name: 'func-gen13-step3-6231'
-          package: release.zip              # ← 6 zip のまま送る
-          remote-build: true                # ← 6 Azure 側で pip install させる（slot-name は Flex 従量課金では使えないので削除）
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_A77422790EBC45E08FF3EDE3FCB3DC10 }}
+          slot-name: 'Production'
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7755CB315A4C4501B292A67557299B91 }}
           sku: 'flexconsumption'
+        
