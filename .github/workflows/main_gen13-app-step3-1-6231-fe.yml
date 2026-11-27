@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - 'main'
+    paths:                                   # ← 1
+      - 'frontend/**'
+      - '.github/workflows/main_gen13-app-step3-1-6231-fe.yml'
   workflow_dispatch:
 
 jobs:
@@ -14,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
+    defaults:                                # ← 2
+      run:
+        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -24,16 +30,20 @@ jobs:
           node-version: '24.x'
 
       - name: npm install, build, and test
+        env:                                 # ← 3
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
         run: |
           npm install
           npm run build --if-present
           npm run test --if-present
+      - name: Zip artifact for deployment    # ← 4
+        run: zip -qr ../release.zip . -x '.next/cache/*'
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: release.zip                  # ← 4
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,5 +61,5 @@ jobs:
         with:
           app-name: 'gen13-app-step3-1-6231-fe'
           slot-name: 'Production'
-          package: .
+          package: release.zip               # ← 5
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_33289A2838BC444ABE710CFD7521ECC5 }}
