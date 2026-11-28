@@ -36,6 +36,14 @@ body { margin:0; font-family:"Hiragino Sans","Yu Gothic","Meiryo",sans-serif; co
 .budget-range input[type="range"]::-moz-range-thumb { pointer-events:auto; width:18px; height:18px; border-radius:50%; background:#fff; border:2px solid var(--accent); cursor:pointer; box-sizing:border-box; }
 .budget-range input[type="range"]:disabled::-webkit-slider-thumb { border-color:#b0b7bf; background:#e4e7eb; cursor:not-allowed; }
 .budget-range input[type="range"]:disabled::-moz-range-thumb { border-color:#b0b7bf; background:#e4e7eb; cursor:not-allowed; }
+/* スマホなどの狭い画面（600px以下）：横5列では入りきらないので4列にして、スライダーを一番下の行に横いっぱいで出す。
+   金額の枠は、固定の130pxをやめて、列の幅に合わせて縮める */
+@media (max-width:600px) {
+  .budget { grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr); }
+  .budget-label { white-space:nowrap; }
+  .form .budget-box { width:100%; min-width:0; }
+  .budget-range { order:1; grid-column:1 / -1; margin:0 9px; }
+}
 /* タグ欄（Issue #14）：丸いボタンを並べ、選んだものは濃い色にする */
 .tag-picker { display:flex; flex-direction:column; gap:6px; }
 .tag-label { font-size:14px; }
